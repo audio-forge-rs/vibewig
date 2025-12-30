@@ -56,7 +56,9 @@ struct Args {
 
 struct PluginConnection {
     write: futures_util::stream::SplitSink<
-        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+        tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
         Message,
     >,
 }
@@ -170,7 +172,14 @@ fn parse_command(input: &str) -> Result<(ClientMessage, Option<u8>)> {
             let durations = vec![duration; notes.len()];
             let velocities = vec![velocity; notes.len()];
 
-            Ok((ClientMessage::SetPattern { notes, durations, velocities }, target))
+            Ok((
+                ClientMessage::SetPattern {
+                    notes,
+                    durations,
+                    velocities,
+                },
+                target,
+            ))
         }
         _ => anyhow::bail!("Unknown command: {}", cmd),
     }
@@ -255,16 +264,14 @@ async fn main() -> Result<()> {
         match line {
             "quit" | "exit" => break,
             "help" => print_help(),
-            _ => {
-                match parse_command(line) {
-                    Ok((msg, target)) => {
-                        if let Err(e) = send_to_tracks(&mut track1, &mut track2, &msg, target).await {
-                            println!("Error: {}", e);
-                        }
+            _ => match parse_command(line) {
+                Ok((msg, target)) => {
+                    if let Err(e) = send_to_tracks(&mut track1, &mut track2, &msg, target).await {
+                        println!("Error: {}", e);
                     }
-                    Err(e) => println!("Parse error: {}", e),
                 }
-            }
+                Err(e) => println!("Parse error: {}", e),
+            },
         }
     }
 

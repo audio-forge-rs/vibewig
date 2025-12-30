@@ -1,18 +1,18 @@
+use crossbeam_channel::{bounded, Receiver, Sender};
 use nih_plug::prelude::*;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::net::TcpListener;
 use std::sync::Arc;
 use std::thread;
-use crossbeam_channel::{bounded, Receiver, Sender};
 use tungstenite::accept;
 
 /// A single note in the pattern
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Note {
-    pub pitch: u8,       // MIDI note number
-    pub duration: f64,   // Duration in beats
-    pub velocity: u8,    // 0-127
+    pub pitch: u8,     // MIDI note number
+    pub duration: f64, // Duration in beats
+    pub velocity: u8,  // 0-127
 }
 
 /// Messages from WebSocket client to plugin
@@ -83,16 +83,23 @@ impl Default for VibewigPlugin {
 impl Default for VibewigParams {
     fn default() -> Self {
         Self {
-            port: IntParam::new("WebSocket Port", 9001, IntRange::Linear { min: 9001, max: 9010 }),
+            port: IntParam::new(
+                "WebSocket Port",
+                9001,
+                IntRange::Linear {
+                    min: 9001,
+                    max: 9010,
+                },
+            ),
         }
     }
 }
 
 impl Plugin for VibewigPlugin {
-    const NAME: &'static str = "Vibewig";
-    const VENDOR: &'static str = "vibewig";
-    const URL: &'static str = "https://github.com/vibewig/vibewig";
-    const EMAIL: &'static str = "";
+    const NAME: &'static str = "Voxel";
+    const VENDOR: &'static str = "Brian Edwards";
+    const URL: &'static str = "https://audio-forge-rs.github.io/vibewig/";
+    const EMAIL: &'static str = "brian.mabry.edwards@gmail.com";
     const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
     const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[];
@@ -128,12 +135,12 @@ impl Plugin for VibewigPlugin {
             let listener = match TcpListener::bind(format!("127.0.0.1:{}", port)) {
                 Ok(l) => l,
                 Err(e) => {
-                    eprintln!("Vibewig: Failed to bind to port {}: {}", port, e);
+                    eprintln!("Voxel: Failed to bind to port {}: {}", port, e);
                     return;
                 }
             };
 
-            eprintln!("Vibewig: WebSocket server listening on port {}", port);
+            eprintln!("Voxel: WebSocket server listening on port {}", port);
 
             for stream in listener.incoming() {
                 match stream {
@@ -141,21 +148,23 @@ impl Plugin for VibewigPlugin {
                         let tx = tx_clone.clone();
                         thread::spawn(move || {
                             if let Ok(mut websocket) = accept(stream) {
-                                eprintln!("Vibewig: Client connected");
+                                eprintln!("Voxel: Client connected");
                                 while let Ok(msg) = websocket.read() {
                                     if msg.is_text() {
                                         let text = msg.to_text().unwrap_or("");
-                                        if let Ok(client_msg) = serde_json::from_str::<ClientMessage>(text) {
+                                        if let Ok(client_msg) =
+                                            serde_json::from_str::<ClientMessage>(text)
+                                        {
                                             let _ = tx.try_send(client_msg);
                                         }
                                     }
                                 }
-                                eprintln!("Vibewig: Client disconnected");
+                                eprintln!("Voxel: Client disconnected");
                             }
                         });
                     }
                     Err(e) => {
-                        eprintln!("Vibewig: Connection error: {}", e);
+                        eprintln!("Voxel: Connection error: {}", e);
                     }
                 }
             }
@@ -174,11 +183,20 @@ impl Plugin for VibewigPlugin {
         while let Ok(msg) = self.message_rx.try_recv() {
             let mut pattern = self.pattern.lock();
             match msg {
-                ClientMessage::SetPattern { notes, durations, velocities } => {
-                    pattern.notes = notes.iter()
+                ClientMessage::SetPattern {
+                    notes,
+                    durations,
+                    velocities,
+                } => {
+                    pattern.notes = notes
+                        .iter()
                         .zip(durations.iter())
                         .zip(velocities.iter())
-                        .map(|((&pitch, &duration), &velocity)| Note { pitch, duration, velocity })
+                        .map(|((&pitch, &duration), &velocity)| Note {
+                            pitch,
+                            duration,
+                            velocity,
+                        })
                         .collect();
                     pattern.current_index = 0;
                     pattern.note_start_beat = 0.0;
@@ -269,8 +287,8 @@ impl Plugin for VibewigPlugin {
 }
 
 impl ClapPlugin for VibewigPlugin {
-    const CLAP_ID: &'static str = "com.vibewig.vibewig";
-    const CLAP_DESCRIPTION: Option<&'static str> = Some("Claude Code controlled MIDI looper");
+    const CLAP_ID: &'static str = "com.voxel.plugin";
+    const CLAP_DESCRIPTION: Option<&'static str> = Some("Speak music into existence");
     const CLAP_MANUAL_URL: Option<&'static str> = None;
     const CLAP_SUPPORT_URL: Option<&'static str> = None;
     const CLAP_FEATURES: &'static [ClapFeature] = &[
@@ -281,11 +299,9 @@ impl ClapPlugin for VibewigPlugin {
 }
 
 impl Vst3Plugin for VibewigPlugin {
-    const VST3_CLASS_ID: [u8; 16] = *b"VibewigPlugin___";
-    const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[
-        Vst3SubCategory::Instrument,
-        Vst3SubCategory::Tools,
-    ];
+    const VST3_CLASS_ID: [u8; 16] = *b"VoxelPlugin_____";
+    const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] =
+        &[Vst3SubCategory::Instrument, Vst3SubCategory::Tools];
 }
 
 nih_export_clap!(VibewigPlugin);
