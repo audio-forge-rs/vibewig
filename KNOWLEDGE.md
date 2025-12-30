@@ -71,12 +71,30 @@ Patterns loop and persist until changed. Transport-synced. Stable, not one-shots
               Bitwig Track         Bitwig Track         Bitwig Track
 ```
 
-### Synchronization Protocol
+### OSC Protocol
+
+**Conductor → Plugin:**
+| Message | Args | Description |
+|---------|------|-------------|
+| `/vibewig/prepare` | state, label | Stage next program |
+| `/vibewig/commit` | | Switch to staged on beat 1 |
+| `/vibewig/cancel` | | Delete staged program, keep current |
+| `/vibewig/mute` | bool | Mute/unmute current output |
+
+**Plugin → Conductor:**
+| Message | Args | Description |
+|---------|------|-------------|
+| `/vibewig/register` | plugin_id, port | Plugin announces itself |
+| `/vibewig/ack` | plugin_id | Acknowledge PREPARE received |
+| `/vibewig/status` | plugin_id, current, staged, muted | Periodic heartbeat |
+
+### Synchronization Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CONDUCTOR                                │
 │                                                                  │
+│  PREPARE FLOW:                                                  │
 │  1. Receive batch from Claude Code (HTTP POST)                  │
 │  2. Generate version label (e.g., "v6-drop")                    │
 │  3. For each plugin:                                            │
@@ -85,35 +103,63 @@ Patterns loop and persist until changed. Transport-synced. Stable, not one-shots
 │  4. All plugins ready?                                          │
 │     └── Send OSC: /vibewig/commit to all                        │
 │  5. Return HTTP 200 with version label                          │
+│                                                                  │
+│  CANCEL FLOW:                                                   │
+│  1. Receive cancel from Claude Code (HTTP DELETE)               │
+│  2. Send OSC: /vibewig/cancel to all plugins                    │
+│  3. Staged programs discarded, current keeps playing            │
+│                                                                  │
+│  MUTE FLOW:                                                     │
+│  1. Receive mute from Claude Code (HTTP POST /mute)             │
+│  2. Send OSC: /vibewig/mute true to target plugins              │
+│  3. Plugins silence output (notes off), program stays loaded    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Plugin State Machine
 
 ```
-                    ┌─────────────┐
-                    │   PLAYING   │◄─────────────────┐
-                    │  (current)  │                  │
-                    └──────┬──────┘                  │
-                           │                         │
-                    PREPARE(next_state)              │
-                           │                         │
-                           ▼                         │
-                    ┌─────────────┐                  │
-                    │   STAGED    │                  │
-                    │  (current + │                  │
-                    │   pending)  │                  │
-                    └──────┬──────┘                  │
-                           │                         │
-                        COMMIT                       │
-                           │                         │
-                           ▼                         │
-                    ┌─────────────┐                  │
-                    │  COMMITTED  │                  │
-                    │  (waiting   │──── beat 1 ─────┘
-                    │  for beat 1)│
-                    └─────────────┘
+                              MUTE
+                    ┌─────────────────────────────────────┐
+                    │                                     │
+                    ▼                                     │
+            ┌──────────────┐                              │
+            │    MUTED     │◄───── MUTE ──────┐           │
+            │  (silence)   │                  │           │
+            └──────┬───────┘                  │           │
+                   │                          │           │
+                UNMUTE                        │           │
+                   │                          │           │
+                   ▼                          │           │
+            ┌─────────────┐                   │           │
+            │   PLAYING   │◄──────────────────┼───────────┤
+            │  (current)  │                   │           │
+            └──────┬──────┘                   │           │
+                   │                          │           │
+            PREPARE(next_state)               │           │
+                   │                          │           │
+                   ▼                          │           │
+            ┌─────────────┐     CANCEL        │           │
+            │   STAGED    │──────────────────►│           │
+            │  (current + │                   │           │
+            │   pending)  │                              │
+            └──────┬──────┘                              │
+                   │                                     │
+                COMMIT                                   │
+                   │                                     │
+                   ▼                                     │
+            ┌─────────────┐                              │
+            │  COMMITTED  │                              │
+            │  (waiting   │──── beat 1 ─────────────────►│
+            │  for beat 1)│                    back to PLAYING
+            └─────────────┘
 ```
+
+**States:**
+- **PLAYING** - Current program running, outputting MIDI
+- **MUTED** - Program loaded but silent (all notes off)
+- **STAGED** - Current playing + next program waiting
+- **COMMITTED** - Waiting for beat 1 to switch
 
 ### Version Labeling
 
@@ -184,7 +230,8 @@ Each commit gets a label for traceability:
 
 - Conductor sends COMMIT message
 - Plugin watches Bitwig transport internally
-- Plugin switches to new state on next beat 1
+- Plugin switches to new state on **beat 1 of next bar** - always
+- No immediate commit option - consistency over convenience
 - Keeps timing logic in plugin (where transport info is native)
 - Simpler protocol - Conductor doesn't need to know transport position
 
@@ -376,9 +423,9 @@ If we ever need deeper integration:
 
 ### Synchronization
 - [x] How does Conductor know transport position? → It doesn't. Plugin handles timing.
+- [x] Can user override and commit immediately? → **No. Always wait for beat 1.** Consistency over convenience.
+- [x] What beat to switch on? → **Always beat 1 of next bar.** No configuration.
 - [ ] What if a plugin doesn't ACK prepare? (Timeout? Abort? Proceed without?)
-- [ ] Can user override and commit immediately (not wait for beat 1)?
-- [ ] What beat to switch on? Always beat 1? Or next bar? Configurable?
 
 ### Musical Features (later)
 - [ ] Polyphony - when to add chord support?
@@ -432,3 +479,8 @@ If we ever need deeper integration:
   - Plugin GUI: Yes, shows current + staged version labels
   - History: Conductor stores, plugin is stateless
   - Version recall: Claude enriches version list with creative context
+- **Protocol additions:**
+  - `/vibewig/cancel` - delete staged program, keep current playing
+  - `/vibewig/mute` - mute/unmute current output (notes off, program stays)
+  - `/vibewig/status` - plugin heartbeat with current state
+  - Updated state machine with MUTED state and CANCEL transition
