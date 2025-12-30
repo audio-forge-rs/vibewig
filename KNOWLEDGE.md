@@ -230,10 +230,16 @@ Each commit gets a label for traceability:
 
 - Conductor sends COMMIT message
 - Plugin watches Bitwig transport internally
-- Plugin switches to new state on **beat 1 of next bar** - always
-- No immediate commit option - consistency over convenience
+- **If transport playing:** switch on beat 1 of next bar
+- **If transport stopped:** switch immediately on COMMIT
+- Conductor must send COMMIT to all plugins as fast as possible (tight loop, no delays)
 - Keeps timing logic in plugin (where transport info is native)
 - Simpler protocol - Conductor doesn't need to know transport position
+
+**Why immediate when stopped:**
+- User is editing/preparing, wants to hear changes now
+- No musical timing to sync to anyway
+- Natural workflow: stop, tweak, listen, repeat
 
 ### Protocol: OSC over UDP (Plugin ↔ Conductor)
 
@@ -423,8 +429,8 @@ If we ever need deeper integration:
 
 ### Synchronization
 - [x] How does Conductor know transport position? → It doesn't. Plugin handles timing.
-- [x] Can user override and commit immediately? → **No. Always wait for beat 1.** Consistency over convenience.
-- [x] What beat to switch on? → **Always beat 1 of next bar.** No configuration.
+- [x] Immediate vs beat 1? → **If playing: beat 1. If stopped: immediate.**
+- [x] Conductor timing? → **Send COMMIT to all plugins as fast as possible** (tight loop)
 - [ ] What if a plugin doesn't ACK prepare? (Timeout? Abort? Proceed without?)
 
 ### Musical Features (later)
