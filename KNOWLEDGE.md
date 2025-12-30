@@ -198,6 +198,50 @@ Each commit gets a label for traceability:
 
 ---
 
+## Design Principles
+
+### Priority Order
+
+1. **Performance** - Low latency, no audio glitches, responsive
+2. **Reliability** - Robust, predictable, doesn't crash
+3. **Debuggability** - Can see what's happening, trace issues
+4. **Testability** - Unit tests where practical
+
+### Debuggability
+
+- Conductor logs all messages (OSC in/out, HTTP requests)
+- Log levels: ERROR, WARN, INFO, DEBUG, TRACE
+- Plugin can log to stderr (nih-plug captures)
+- Version labels provide audit trail
+- `/vibewig/status` heartbeat shows plugin state
+- CLI can query Conductor for current state of all plugins
+
+**Debug commands (via CLI):**
+```bash
+vibewig status          # Show all plugins, their state, versions
+vibewig history         # Show version history
+vibewig log --follow    # Tail Conductor logs
+```
+
+### Testability
+
+- Core logic separated from I/O (OSC, HTTP)
+- State machines are pure functions where possible
+- Mock transport for plugin tests
+- Integration tests: Conductor + mock plugins
+
+**What to test:**
+- State machine transitions (PLAYING → STAGED → COMMITTED)
+- Version history storage/retrieval
+- OSC message parsing/serialization
+- PREPARE/COMMIT/CANCEL flows
+
+**What NOT to test (performance sensitive):**
+- Audio thread code in plugin
+- Real-time OSC latency
+
+---
+
 ## Design Decisions
 
 ### Component Naming: Conductor
@@ -490,3 +534,6 @@ If we ever need deeper integration:
   - `/vibewig/mute` - mute/unmute current output (notes off, program stays)
   - `/vibewig/status` - plugin heartbeat with current state
   - Updated state machine with MUTED state and CANCEL transition
+- **Timing:** If stopped → immediate. If playing → beat 1.
+- **Design principles:** Performance > Reliability > Debuggability > Testability
+- **Debug CLI:** `vibewig status`, `vibewig history`, `vibewig log`
