@@ -600,7 +600,7 @@ dependencies = [
 [[package]]
 name = "nih_plug"
 version = "0.0.0"
-source = "git+https://github.com/robbert-vdh/nih-plug.git#28b149ec4d62757d0b448809148a0c3ca6e09a95"
+source = "git+https://github.com/bedwards/nih-plug.git?branch=feature%2Ftrack-info-extension#a7a61adfc1f980565cfe8d7e4d1ce39352948438"
 dependencies = [
  "anyhow",
  "anymap3",
@@ -631,7 +631,7 @@ dependencies = [
 [[package]]
 name = "nih_plug_derive"
 version = "0.1.0"
-source = "git+https://github.com/robbert-vdh/nih-plug.git#28b149ec4d62757d0b448809148a0c3ca6e09a95"
+source = "git+https://github.com/bedwards/nih-plug.git?branch=feature%2Ftrack-info-extension#a7a61adfc1f980565cfe8d7e4d1ce39352948438"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -641,7 +641,7 @@ dependencies = [
 [[package]]
 name = "nih_plug_xtask"
 version = "0.1.0"
-source = "git+https://github.com/robbert-vdh/nih-plug.git#28b149ec4d62757d0b448809148a0c3ca6e09a95"
+source = "git+https://github.com/bedwards/nih-plug.git?branch=feature%2Ftrack-info-extension#a7a61adfc1f980565cfe8d7e4d1ce39352948438"
 dependencies = [
  "anyhow",
  "cargo_metadata",

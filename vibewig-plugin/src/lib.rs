@@ -59,6 +59,8 @@ pub struct VibewigPlugin {
     message_rx: Receiver<ClientMessage>,
     _message_tx: Sender<ClientMessage>, // Keep sender alive
     last_playing: bool,
+    /// Track name from host (if available)
+    track_name: Option<String>,
 }
 
 #[derive(Params)]
@@ -76,6 +78,7 @@ impl Default for VibewigPlugin {
             message_rx: rx,
             _message_tx: tx,
             last_playing: false,
+            track_name: None,
         }
     }
 }
@@ -120,8 +123,19 @@ impl Plugin for VibewigPlugin {
         &mut self,
         _audio_io_layout: &AudioIOLayout,
         _buffer_config: &BufferConfig,
-        _context: &mut impl InitContext<Self>,
+        context: &mut impl InitContext<Self>,
     ) -> bool {
+        // Query track info from host
+        if let Some(track_info) = context.track_info() {
+            self.track_name = track_info.name.clone();
+            eprintln!(
+                "Voxel: Initialized on track {:?}",
+                track_info.name.as_deref().unwrap_or("<unnamed>")
+            );
+        } else {
+            eprintln!("Voxel: Initialized (track info not available)");
+        }
+
         // Start WebSocket server thread
         let port = self.params.port.value() as u16;
         let (tx, rx) = bounded(64);

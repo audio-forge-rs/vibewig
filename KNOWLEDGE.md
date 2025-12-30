@@ -278,15 +278,17 @@ vibewig log --follow    # Tail Conductor logs
 - Conductor sends COMMIT message
 - Plugin watches Bitwig transport internally
 - **If transport playing:** switch on beat 1 of next bar
-- **If transport stopped:** switch immediately on COMMIT
+- **If transport stopped:** load new program immediately (silently)
+- **When user presses play:** new program plays immediately, even mid-bar
 - Conductor must send COMMIT to all plugins as fast as possible (tight loop, no delays)
 - Keeps timing logic in plugin (where transport info is native)
 - Simpler protocol - Conductor doesn't need to know transport position
 
-**Why immediate when stopped:**
-- User is editing/preparing, wants to hear changes now
-- No musical timing to sync to anyway
-- Natural workflow: stop, tweak, listen, repeat
+**Why this behavior:**
+- When stopped: User is editing/preparing, wants changes ready instantly
+- When pressing play: Hear the new program immediately, no waiting for beat 1
+- When already playing: Changes land on beat 1, feels musical
+- Natural workflow: stop, tweak, press play, hear it now
 
 ### Protocol: OSC over UDP (Plugin ↔ Conductor)
 

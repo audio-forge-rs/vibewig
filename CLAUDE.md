@@ -90,6 +90,12 @@ JSON over WebSocket:
 }
 ```
 
+## Philosophy
+
+**Always do the right thing now. There is no "later."**
+
+Do not shim, mock, document, log, prop-up, or raise-not-implemented. Implement it properly the first time. If a feature requires forking a dependency, fork it. If it requires implementing a CLAP extension, implement it. No shortcuts that defer real work.
+
 ## Conventions
 
 - Use `cargo clippy` before committing - all warnings should be addressed
