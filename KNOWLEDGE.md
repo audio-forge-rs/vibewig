@@ -1,5 +1,8 @@
 # Vibewig Knowledge Base
 
+**Product Name:** Voxel
+**Tagline:** "Speak music into existence"
+
 Living document for research, design decisions, and accumulated knowledge.
 
 ---
@@ -489,6 +492,316 @@ If we ever need deeper integration:
 - [x] Visual feedback in plugin UI? → Yes, current + staged version labels
 - [ ] Error reporting - how does user know if something failed?
 - [ ] What happens if Conductor restarts? (Reconnection, state recovery)
+
+---
+
+## Claude Opus 4.5 & Long-Running Sessions
+
+### Research conducted Dec 2025
+
+### Opus 4.5 Strengths (What I'm Good At)
+
+| Strength | Application to Vibewig |
+|----------|----------------------|
+| **Multi-step autonomous tasks** | Building full system across sessions |
+| **80.9% SWE-bench** | Real-world software engineering |
+| **Fewer dead-ends in agentic workflows** | Less backtracking on architecture |
+| **Best vision model (80.7% MMMU)** | Can analyze diagrams, mockups |
+| **Robust to prompt injection** | Reliable tool execution |
+| **Extended context with compaction** | Long sessions without degradation |
+
+### What I'm Fast At
+- Code generation and refactoring
+- Architecture design and planning
+- Multi-file changes with consistency
+- Backend systems (stronger than UI-heavy frontend)
+
+### Prompt Translation Strategy
+
+For this project, prompts should be translated through these lenses:
+
+**1. Intent Extraction**
+- What does the human want to hear/experience?
+- What musical outcome are they after?
+- Is this a creative direction or a technical fix?
+
+**2. Technical Mapping**
+- Which plugins are affected?
+- What OSC messages need to be sent?
+- What state changes in Conductor?
+
+**3. Verification Planning**
+- How will we know it worked?
+- What should the plugin UI show?
+- What should Claude report back?
+
+**Example Translation:**
+```
+Human: "make it brighter and faster"
+
+Translation:
+- Intent: Increase energy, higher register, shorter notes
+- Technical:
+  - Shift notes up an octave (+12 semitones)
+  - Halve durations
+  - Maybe increase velocity
+- Verification:
+  - Plugin shows new version label
+  - Claude reports "v7-bright-fast: raised octave, doubled tempo feel"
+```
+
+### Long-Running Session Best Practices
+
+**From Anthropic's research:**
+
+1. **Progress Files** - Maintain external artifacts as memory
+   - `claude-progress.txt` for session handoffs
+   - Git commits as incremental checkpoints
+   - Structured feature lists
+
+2. **Two-Agent Pattern**
+   - Initializer: Sets up environment
+   - Coding agent: Makes incremental progress per session
+
+3. **Avoiding Regression**
+   - Tests are critical - they prevent "works for me" lies
+   - Commit often, small commits
+   - Session boundaries are checkpoints
+   - Don't tackle too much at once
+
+4. **Context Hygiene**
+   - `/clear` between unrelated tasks
+   - Use subagents for isolated exploration
+   - Keep CLAUDE.md under 300 lines
+   - Task-specific docs in separate files
+
+5. **Extended Thinking**
+   - "think" → basic analysis
+   - "think hard" → deeper exploration
+   - "think harder" → comprehensive analysis
+   - "ultrathink" → maximum depth
+
+### Self-Refinement Loop for Vibewig
+
+```
+Human prompt
+    │
+    ▼
+┌─────────────────────────────────────┐
+│ 1. UNDERSTAND                       │
+│    - What outcome does human want?  │
+│    - Musical or technical?          │
+│    - Urgent or exploratory?         │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│ 2. TRANSLATE                        │
+│    - Map to system concepts         │
+│    - Identify affected components   │
+│    - Generate version label         │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│ 3. EXECUTE                          │
+│    - Call tools in correct order    │
+│    - Stage → Commit flow            │
+│    - Handle errors gracefully       │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│ 4. VERIFY                           │
+│    - Check tool responses           │
+│    - Confirm expected state         │
+│    - Report clearly to human        │
+└─────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────┐
+│ 5. LEARN                            │
+│    - Did it work as expected?       │
+│    - Update KNOWLEDGE.md if needed  │
+│    - Note patterns for future       │
+└─────────────────────────────────────┘
+```
+
+### Project-Specific Prompt Patterns
+
+**For musical changes:**
+```
+"[mood/energy] [direction]"
+→ Translate to: notes, durations, velocities, which tracks
+```
+
+**For system changes:**
+```
+"[component] should [behavior]"
+→ Translate to: code changes, tests, documentation
+```
+
+**For debugging:**
+```
+"[something] isn't working"
+→ First: query status, check logs
+→ Then: diagnose, propose fix
+```
+
+**For rollback:**
+```
+"go back to [label]"
+→ Conductor lookup → PREPARE old state → COMMIT
+```
+
+---
+
+## Session Management Infrastructure
+
+### Research Dec 2025
+
+Based on Anthropic's engineering posts and community patterns, vibewig uses a multi-artifact system for maintaining consistency across sessions.
+
+### File Structure for Persistence
+
+```
+vibewig/
+├── .claude/
+│   ├── commands/           # Custom slash commands
+│   │   ├── catchup.md      # Read changed files, restore context
+│   │   ├── status.md       # Query system state
+│   │   └── commit.md       # Stage, commit, update progress
+│   ├── context/            # Session context files
+│   │   └── current.md      # Current session context
+│   └── settings.json       # Project permissions
+├── docs/
+│   ├── progress.md         # What's done, what's next
+│   ├── decisions.md        # Why we made choices (immutable log)
+│   └── features.json       # Structured feature tracking
+├── CLAUDE.md               # Universal project conventions (< 300 lines)
+└── KNOWLEDGE.md            # Deep knowledge, research, patterns
+```
+
+### Progress Tracking (docs/progress.md)
+
+```markdown
+# Vibewig Progress
+
+## Current Session
+- Started: [timestamp]
+- Focus: [what we're working on]
+- Branch: [git branch]
+
+## Completed
+- [x] Architecture decisions
+- [x] Protocol design (OSC)
+- [x] Plugin state machine
+
+## In Progress
+- [ ] Conductor daemon implementation
+- [ ] Plugin OSC client
+
+## Next Up
+- [ ] CLI wrapper
+- [ ] Integration tests
+
+## Blockers
+- None currently
+
+## Session Handoff Notes
+[Claude writes notes here before session ends]
+```
+
+### Feature Tracking (docs/features.json)
+
+```json
+{
+  "version": 1,
+  "features": [
+    {
+      "id": "conductor-daemon",
+      "category": "core",
+      "description": "Long-running daemon that manages plugins",
+      "status": "in_progress",
+      "files": ["vibewig-conductor/src/main.rs"],
+      "tests": [],
+      "notes": "HTTP server + OSC client"
+    },
+    {
+      "id": "plugin-osc",
+      "category": "core",
+      "description": "Plugin connects to Conductor via OSC",
+      "status": "pending",
+      "files": ["vibewig-plugin/src/lib.rs"],
+      "tests": [],
+      "notes": "Replace WebSocket with OSC"
+    }
+  ]
+}
+```
+
+### Custom Slash Commands
+
+**/.claude/commands/catchup.md**
+```markdown
+Read the following files to restore session context:
+1. docs/progress.md - current state and next steps
+2. docs/features.json - feature status
+3. git log -10 --oneline - recent commits
+4. git diff --stat HEAD~5 - recent file changes
+
+Summarize what's been done and what's next.
+```
+
+**/.claude/commands/handoff.md**
+```markdown
+Before ending this session:
+1. Update docs/progress.md with current state
+2. Commit any uncommitted work with clear message
+3. Note any blockers or important context
+4. Update docs/features.json if feature status changed
+
+This ensures the next session can pick up seamlessly.
+```
+
+**/.claude/commands/status.md**
+```markdown
+Report the current state:
+1. Which features are complete vs in-progress?
+2. Any failing tests?
+3. Any uncommitted changes?
+4. What was the last thing we were working on?
+```
+
+### GitHub Issues Integration
+
+Use GitHub Issues as source of truth for larger tasks:
+- Each epic/milestone = one Issue
+- Issue body contains acceptance criteria
+- Comments provide history
+- Labels for status: `in-progress`, `blocked`, `ready-for-review`
+
+**Pattern:** Issue → local progress.md → code → commit → update Issue
+
+### Checkpointing Strategy
+
+1. **Every 30 mins or major milestone:** Git commit
+2. **Before context switch:** Run `/handoff`
+3. **Start of session:** Run `/catchup`
+4. **After completing feature:** Update features.json
+
+### Avoiding Regression
+
+From Anthropic research:
+- "Tests are remarkably effective at preventing regressions"
+- "Session boundaries prevent regressions — commit often"
+- "Don't try to tackle too much at once"
+
+**Rules for vibewig:**
+- Never skip tests for "speed"
+- Each commit should be atomic and working
+- If something breaks, fix before moving on
+- Update progress.md before ending session
 
 ---
 

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "updated": "2025-12-30",
+  "features": [
+    {
+      "id": "conductor-daemon",
+      "category": "core",
+      "description": "Long-running daemon that orchestrates plugins",
+      "status": "pending",
+      "acceptance": [
+        "HTTP REST API for CLI commands",
+        "OSC server for plugin registration",
+        "OSC client for sending PREPARE/COMMIT/CANCEL/MUTE",
+        "Version history storage",
+        "Logging at configurable levels"
+      ],
+      "files": [],
+      "tests": [],
+      "notes": "Central orchestrator - most complex component"
+    },
+    {
+      "id": "plugin-core",
+      "category": "core",
+      "description": "CLAP plugin that receives state and outputs MIDI",
+      "status": "partial",
+      "acceptance": [
+        "Connects to Conductor via OSC on init",
+        "Receives PREPARE/COMMIT/CANCEL/MUTE",
+        "Outputs MIDI notes synced to transport",
+        "Switches state on beat 1 (or immediately if stopped)",
+        "GUI shows current + staged version labels"
+      ],
+      "files": ["vibewig-plugin/src/lib.rs"],
+      "tests": [],
+      "notes": "Scaffold exists with WebSocket, needs OSC refactor"
+    },
+    {
+      "id": "cli-wrapper",
+      "category": "core",
+      "description": "Thin CLI that sends commands to Conductor",
+      "status": "pending",
+      "acceptance": [
+        "vibewig status - show plugin states",
+        "vibewig history - show version history",
+        "vibewig send - send musical commands",
+        "vibewig log - tail Conductor logs"
+      ],
+      "files": [],
+      "tests": [],
+      "notes": "Simple HTTP client wrapper"
+    },
+    {
+      "id": "osc-protocol",
+      "category": "protocol",
+      "description": "OSC message definitions for Conductor ↔ Plugin",
+      "status": "designed",
+      "acceptance": [
+        "/vibewig/register - plugin announces itself",
+        "/vibewig/prepare - stage next state",
+        "/vibewig/commit - switch on beat 1",
+        "/vibewig/cancel - discard staged",
+        "/vibewig/mute - silence output",
+        "/vibewig/ack - plugin confirms",
+        "/vibewig/status - plugin heartbeat"
+      ],
+      "files": [],
+      "tests": [],
+      "notes": "Documented in KNOWLEDGE.md"
+    },
+    {
+      "id": "version-history",
+      "category": "feature",
+      "description": "Conductor stores all versions for rollback",
+      "status": "pending",
+      "acceptance": [
+        "Each commit gets contextual label from Claude",
+        "History persists across Conductor restarts",
+        "Can rollback to any previous version",
+        "Claude enriches history with creative context"
+      ],
+      "files": [],
+      "tests": [],
+      "notes": "Plugin is stateless, Conductor owns history"
+    },
+    {
+      "id": "plugin-gui",
+      "category": "feature",
+      "description": "Plugin GUI showing version labels",
+      "status": "pending",
+      "acceptance": [
+        "Shows current version label",
+        "Shows staged version label (if any)",
+        "Indicates muted state",
+        "Minimal, clear design"
+      ],
+      "files": [],
+      "tests": [],
+      "notes": "Use nih-plug's egui or VIZIA support"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+#!/bin/bash
+# Pre-commit hook for vibewig
+# Install: cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+
+echo "Running pre-commit checks..."
+
+# 1. Format check
+echo "Checking formatting..."
+cargo fmt --check
+if [ $? -ne 0 ]; then
+    echo "ERROR: Code not formatted. Run 'cargo fmt' first."
+    exit 1
+fi
+
+# 2. Clippy
+echo "Running clippy..."
+cargo clippy --all-targets -- -D warnings
+if [ $? -ne 0 ]; then
+    echo "ERROR: Clippy warnings found. Fix them before committing."
+    exit 1
+fi
+
+# 3. Tests (if any exist)
+echo "Running tests..."
+cargo test --quiet
+if [ $? -ne 0 ]; then
+    echo "ERROR: Tests failed. Fix them before committing."
+    exit 1
+fi
+
+# 4. Check for common issues
+echo "Checking for common issues..."
+
+# No TODO without issue reference
+if git diff --cached | grep -E "TODO[^(]|FIXME[^(]" > /dev/null; then
+    echo "WARNING: Found TODO/FIXME without issue reference. Consider adding (#123) format."
+fi
+
+# No secrets in code
+if git diff --cached | grep -iE "(api_key|secret|password)\s*=" > /dev/null; then
+    echo "ERROR: Possible secret detected in code. Review before committing."
+    exit 1
+fi
+
+echo "Pre-commit checks passed!"
