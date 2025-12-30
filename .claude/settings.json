@@ -4,12 +4,20 @@
       "Bash(cargo:*)",
       "Bash(git:*)",
       "Bash(gh:*)",
+      "Bash(./scripts/*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(which:*)",
       "Read",
       "Write",
       "Edit"
     ],
     "deny": [
       "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
       "Bash(git push --force)",
       "Bash(git reset --hard)"
     ]

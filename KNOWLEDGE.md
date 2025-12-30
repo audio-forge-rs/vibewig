@@ -824,6 +824,112 @@ From Anthropic research:
 
 ---
 
+## Autonomous Building
+
+### Overview
+
+Vibewig supports autonomous building sessions where Claude Code works independently without human interaction. This requires proper setup of permissions and context restoration.
+
+### Prerequisites
+
+**.claude/settings.json** - Permissions for autonomous work:
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(./scripts/*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(which:*)",
+      "Read",
+      "Write",
+      "Edit"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(git push --force)",
+      "Bash(git reset --hard)"
+    ]
+  }
+}
+```
+
+### Autonomous Session Protocol
+
+Use `/autonomous` slash command to start a focused building session:
+
+**1. Restore Context**
+- Read `docs/progress.md` - current state
+- Read `docs/features.json` - feature status
+- Read `KNOWLEDGE.md` - design decisions
+- Run `git log -5 --oneline` - recent history
+
+**2. Identify Next Task**
+- Find next `pending` or `partial` feature in `docs/features.json`
+- If current feature is `in_progress`, continue it
+- Make reasonable decisions based on documented architecture
+
+**3. Implement**
+- Follow architecture: Conductor (HTTP+OSC), Plugin (OSC+GUI), CLI (HTTP)
+- Use OSC over UDP for plugin communication
+- Use HTTP REST for CLI to Conductor
+- Commit often with clear messages
+- Run `cargo clippy` and `cargo fmt` before commits
+
+**4. Test**
+- Run `cargo test`
+- Run `cargo build --release`
+- Fix any failures before continuing
+
+**5. Update State**
+Before stopping:
+- Update `docs/progress.md` with what was done
+- Update `docs/features.json` if feature status changed
+- Commit with "Session handoff: [summary]"
+
+**6. Rules**
+- Do NOT ask questions—make reasonable decisions
+- Do NOT skip tests for speed
+- Do NOT leave uncommitted work
+- Do NOT break existing functionality
+
+**7. Report**
+When done, summarize:
+- What was implemented
+- What's next
+- Any blockers discovered
+
+### Building the Plugin
+
+```bash
+# Build all components
+cargo build --release
+
+# Plugin location after build
+ls -la target/bundled/
+```
+
+The built plugin (`.clap` file) goes in:
+- **macOS:** `~/Library/Audio/Plug-Ins/CLAP/`
+- **Windows:** `C:\Program Files\Common Files\CLAP\`
+- **Linux:** `~/.clap/`
+
+### Installing in Bitwig
+
+1. Build: `cargo build --release`
+2. Copy `.clap` to plugin folder (see paths above)
+3. In Bitwig: Settings → Locations → Rescan
+4. Add to track: Browser → Devices → Vibewig
+
+---
+
 ## Changelog
 
 **2025-12-30**

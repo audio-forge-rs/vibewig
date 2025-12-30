@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "vibewig-plugin",
     "vibewig-client",
+    "xtask",
 ]
 
 [workspace.package]
