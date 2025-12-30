@@ -1,86 +1,66 @@
-# vibewig
+# Voxel
 
-Interactive music generation where Claude Code prompts produce music in Bitwig Studio.
+*Speak music into existence*
+
+Interactive music generation where natural language prompts produce music in Bitwig Studio.
+
+**Website:** [audio-forge-rs.github.io/vibewig](https://audio-forge-rs.github.io/vibewig/)
+
+---
 
 ## Architecture
 
 ```
-Human prompt → Claude Code → vibewig client → Plugin (Track 1)
-                                    ↓
-                             Plugin (Track 2)
-                                    ↓
-                             Bitwig → Audio
+Human prompt → Claude Code → Conductor → Plugin (Track 1)
+                                 ↓
+                           Plugin (Track 2)
+                                 ↓
+                           Bitwig → Audio
 ```
 
 ## Components
 
-- **vibewig-plugin**: CLAP instrument plugin (Rust/nih-plug) with embedded WebSocket server
-- **vibewig-client**: CLI tool that Claude Code uses to send musical commands
-
-## Quick Start
-
-### Build
-
-```bash
-cargo build --release
-```
-
-### Install Plugin
-
-Copy the plugin to your CLAP folder:
-
-```bash
-# macOS
-cp target/release/libvibewig_plugin.dylib ~/Library/Audio/Plug-Ins/CLAP/vibewig.clap
-
-# Linux
-cp target/release/libvibewig_plugin.so ~/.clap/vibewig.clap
-```
-
-### Usage
-
-1. Load **Vibewig** as an instrument on two tracks in Bitwig
-2. Set track 1 plugin port to 9001, track 2 to 9002
-3. Route plugin MIDI output to synths
-4. Start the client:
-
-```bash
-./target/release/vibewig
-```
-
-5. Send patterns:
-
-```bash
-> play 60 64 67 72          # C major arpeggio on both tracks
-> 1:play 48 dur:1           # Low C on track 1, 1 beat duration
-> 2:clear                    # Stop track 2
-```
-
-## Client Commands
-
-| Command | Description |
-|---------|-------------|
-| `play <notes> [dur:X] [vel:X]` | Set pattern with MIDI notes |
-| `clear` / `stop` | Clear the pattern |
-| `1:` / `2:` prefix | Target specific track |
-| `help` | Show help |
-| `quit` | Exit |
+- **vibewig-conductor**: Daemon that orchestrates plugins, stores version history
+- **vibewig-cli**: Thin CLI wrapper for sending commands
+- **vibewig-plugin**: CLAP instrument plugin (Rust/nih-plug) with OSC client and GUI
 
 ## How It Works
 
-1. The CLAP plugin runs a WebSocket server on a configurable port
-2. The client connects to one or more plugin instances
-3. Commands set looping note patterns that sync to Bitwig's transport
-4. Patterns persist and loop until changed or cleared
+1. You describe what you want to hear in natural language
+2. Claude Code translates your intent to structured commands
+3. Conductor stages the new state to all plugins (PREPARE)
+4. Conductor sends a synchronized commit signal (COMMIT)
+5. All plugins switch to the new program on beat 1
+6. You listen, refine, iterate
+
+Patterns persist and loop until changed. Version labels let you say "go back to the bright arpeggio" and the system knows what you mean.
 
 ## Development
 
 ```bash
-cargo clippy --all-targets    # Lint
-cargo fmt                      # Format
-cargo test                     # Test
+cargo build --release     # Build
+cargo clippy --all-targets # Lint
+cargo fmt                  # Format
+cargo test                 # Test
 ```
+
+## Documentation
+
+- [Essay: When to Hold On and When to Let Go](https://audio-forge-rs.github.io/vibewig/essay.html)
+- [KNOWLEDGE.md](./KNOWLEDGE.md) - Architecture decisions, research, patterns
+- [docs/progress.md](./docs/progress.md) - Current development state
 
 ## License
 
 MIT
+
+---
+
+## Author
+
+**Brian Edwards**
+brian.mabry.edwards@gmail.com
+Waco, Texas, USA
+
+Built with Claude Opus 4.5 via Claude Code CLI 2.0.76
+December 2025

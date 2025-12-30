@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>When to Hold On and When to Let Go | Voxel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
+            background: #0a0a0a;
+            color: #d0d0d0;
+            line-height: 1.8;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            font-size: 1.05rem;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #999;
+        }
+
+        h1 {
+            font-weight: 400;
+            font-size: 2rem;
+            margin-bottom: 2.5rem;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        article p {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        article p:first-of-type::first-letter {
+            font-size: 3.5rem;
+            float: left;
+            line-height: 1;
+            margin-right: 0.5rem;
+            margin-top: 0.1rem;
+            color: #fff;
+            font-weight: 400;
+        }
+
+        blockquote {
+            border-left: 2px solid #333;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            color: #999;
+            font-style: italic;
+        }
+
+        .separator {
+            text-align: center;
+            margin: 3rem 0;
+            color: #333;
+        }
+
+        .colophon {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #222;
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #222;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        footer a {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="./" class="back-link">&larr; Voxel</a>
+
+        <h1>When to Hold On and When to Let Go: Building Software with AI in Late 2025</h1>
+
+        <article>
+            <p>I spent a day in December 2025 building a system that would let me speak to an AI and have it generate music in my digital audio workstation. The technical details matter less than what I learned about the process itself. I came into the project with twenty years of software experience, opinions about architecture, preferences about programming languages, and instincts about what would work. I also came in knowing that the AI systems available today, particularly Claude, have access to research and collective knowledge that I simply do not have time to read. The question that consumed me was not how to build the software. It was how to know when my experience should guide the project and when I should step back and let the system show me what the broader community has already figured out.</p>
+
+            <p>This essay is about that question. It is not a tutorial. It is not a guide to prompt engineering or a review of AI coding tools. It is an attempt to articulate something I had not seen written down: how a human with expertise navigates collaboration with a system that has different expertise, and how to structure a project so that both forms of knowledge improve the outcome.</p>
+
+            <p>The buried assumption in most writing about AI-assisted coding is that the human knows what they want and the AI helps them get it faster. This is true for small tasks. It is not true for projects that span days or weeks, where the human's initial assumptions may be wrong, where the problem space is large enough that no single person has explored all of it, and where the AI has been trained on the accumulated solutions of thousands of engineers who faced similar problems. In those cases, the relationship is not human-directs and AI-executes. It is something more like a conversation between two specialists who know different things.</p>
+
+            <p>Andrej Karpathy coined the term "vibe coding" in February 2025 to describe a style of development where the programmer describes what they want in natural language and the AI generates the implementation. The programmer does not review every line. They evaluate the output by running it, seeing if it works, and iterating from there. By the end of the year, Merriam-Webster and Collins Dictionary had both recognized the term, which tells you how quickly this practice spread. But as one developer wrote in Fast Company in September, "the vibe coding hangover is upon us." Projects built this way were hitting walls. The code worked until it did not, and when it broke, the humans maintaining it did not understand it well enough to fix it.</p>
+
+            <p>What I observed in my own project was a different pattern. The failures came not from vibe coding itself but from an imbalance in when to apply human judgment and when to defer to the system. I would insist on an architectural choice because it felt right, only to discover through research that the community had already explored that path and found it wanting. Or I would let the AI make a decision that required domain knowledge it did not have, and the result would be technically correct but musically wrong. The skill I was developing was not prompting. It was calibration.</p>
+
+            <p>Let me be concrete. My project involved building a plugin for Bitwig Studio, a digital audio workstation. The plugin would receive messages from an orchestration layer, which would in turn receive commands from an AI assistant. When I said "make the melody brighter and faster," the assistant would translate that into specific musical parameters and send them to the plugin, which would output MIDI notes synchronized to the tempo of the song. The human would listen, refine their request, and iterate.</p>
+
+            <p>I had experience with audio plugin development. I knew the constraints: audio processing happens on a real-time thread where you cannot allocate memory, acquire locks, or do anything that might cause the thread to wait. I knew the Rust programming language and had opinions about which plugin framework to use. I knew Bitwig and its capabilities. All of this experience was genuinely useful. It let me ask the right questions and evaluate the answers.</p>
+
+            <p>But I did not know everything. I did not know the current state of the art in AI-assisted coding workflows. I did not know what patterns Anthropic, the company behind Claude, had published about running AI agents across multiple sessions. I did not know what problems other developers had encountered when building similar systems or what solutions they had found. I could have spent days reading, or I could have asked the system to research for me and summarize what it found.</p>
+
+            <p>I chose to ask. And this is where the essay becomes about process rather than technology.</p>
+
+            <p>When I asked Claude to research "vibe coding best practices" and "Claude Code context management" and "long-running agent patterns," it returned information I would not have found on my own, or would have found only after hours of reading. Anthropic had published an engineering blog post in November 2025 titled "Effective harnesses for long-running agents." The post described a specific problem: AI agents that work on complex tasks need to span multiple sessions, but each new session begins with no memory of what came before. "Imagine a software project staffed by engineers working in shifts," the post said, "where each new engineer arrives with no memory of what happened on the previous shift."</p>
+
+            <p>This was exactly my situation. I was building a project that would take days or weeks, and Claude's context window, while large, would fill up. The system would compact the context, summarizing older parts of the conversation to make room for new content. Critical details would be lost. Decisions I had explained would be forgotten. I had experienced this in previous projects as a gradual degradation in the quality of the AI's responses, a sense that it was losing the thread.</p>
+
+            <p>Anthropic's solution, as described in the blog post, was architectural. They proposed "a two-fold solution: an initializer agent that sets up the environment on the first run, and a coding agent that is tasked with making incremental progress in every session, while leaving clear artifacts for the next session." The key insight was that external artifacts, files on disk, become the agent's long-term memory. A progress file, a git history, a structured feature list. Each session begins by reading these artifacts to reconstruct context. Each session ends by updating them.</p>
+
+            <p>I would not have designed this on my own. My instinct would have been to rely on the AI's built-in memory, to trust that the system would somehow retain what mattered. The research told me that this instinct was wrong, and more importantly, it told me what to do instead. I created a progress file, a feature tracking file, a decisions log. I wrote custom commands that Claude could execute to restore context at the start of a session and save context at the end.</p>
+
+            <p>This is what I mean by knowing when to let go. I let go of my assumption that the AI would handle memory on its own. I adopted a pattern developed by people who had studied this problem more systematically than I had.</p>
+
+            <p>But I did not let go of everything. When the research suggested that I consider using a Bitwig Controller script written in Java instead of a CLAP plugin written in Rust, I pushed back. I knew from experience that Java's garbage collector would cause unpredictable pauses, which in audio processing means glitches. I knew that Rust's ownership model would let the compiler catch real-time safety violations at compile time. I knew that plugins are a more natural user experience for Bitwig users than controller scripts. This was domain knowledge that the AI did not have, and when I explained my reasoning, it accepted my judgment and updated its recommendations.</p>
+
+            <p>The pattern that emerged was something like this: I would state my preferences and constraints. The AI would research and propose. I would evaluate the proposals against my experience. Where the research contradicted my instincts, I would examine whether my instincts were based on outdated information or genuine domain knowledge. Where they were based on domain knowledge, I would explain that knowledge and the AI would incorporate it. Where they were based on habit or assumption, I would let go.</p>
+
+            <p>One example of letting go involved the communication protocol between components. My initial thought was to use WebSockets, a technology I knew well. The AI researched alternatives and suggested Open Sound Control, a protocol I had heard of but never used. OSC, it explained, was the standard in the music software ecosystem. It would allow integration with other tools like TouchOSC and Max/MSP. It used UDP rather than TCP, which meant lower latency at the cost of no guaranteed delivery. For my use case, where I was sending control messages rather than audio data, this tradeoff was acceptable.</p>
+
+            <p>I would not have made this choice on my own. I would have built a working system with WebSockets and never known that I was swimming against the current of the entire music software ecosystem. The AI's research corrected a blind spot I did not know I had.</p>
+
+            <p>Another example of holding on involved timing. When should a new musical pattern start playing? My instinct was that it should always start on beat one of the next measure. This is how musicians think. You do not change the chord progression in the middle of a bar. The AI initially proposed making this configurable, offering an option for immediate switching. I said no. Consistency over convenience. Musical timing is not a setting to be tweaked; it is a constraint that makes the system predictable. The AI accepted this and updated the design.</p>
+
+            <p>Later, I refined the rule: if the transport is playing, switch on beat one. If the transport is stopped, switch immediately. This came from thinking about the user experience. When you are editing, you want to hear changes now. When the music is playing, you want changes to land on the beat. The AI had not thought of this distinction because it did not have the experience of sitting in front of a DAW, stopping playback to make a change, and wanting to hear the result without pressing play. I did.</p>
+
+            <p>This interplay, research informing instinct and instinct constraining research, is what I mean by calibration. It is not a formula. It is a judgment that develops through practice.</p>
+
+            <p>The question of how to structure files for an AI-assisted project turned out to be more important than I expected. Claude reads certain files at the start of every session. If those files are bloated with irrelevant information, the AI's attention is diluted. If they are too sparse, the AI lacks context. The community consensus, as I learned from the research, was that the main configuration file should be under three hundred lines and should contain facts rather than procedures. What files exist. What the architecture looks like. What conventions the project follows. Procedures, the step-by-step instructions for specific tasks, should go in separate files that the AI reads only when relevant.</p>
+
+            <p>This is a small detail that has large consequences. A bloated configuration file means every session starts with the AI processing information it does not need, wasting context window space that could be used for the actual work. A well-structured configuration file means the AI begins with exactly the context it needs and no more. I restructured my project accordingly: a lean CLAUDE.md file for universal facts, a longer KNOWLEDGE.md file for deep context and research, separate documentation files for progress tracking and decision logging.</p>
+
+            <p>The research also taught me about guardrails. AI-generated code can regress. A fix in one place can break something elsewhere. The AI might claim something works without having tested it. Anthropic's blog post on context engineering noted that "tests are remarkably effective at preventing regressions with AI assistants." This is not surprising if you think about it. Tests are a form of executable specification. They tell the AI not just what the code should do but whether it actually does it. Without tests, the AI is operating on faith.</p>
+
+            <p>I set up pre-commit hooks that run the formatter, the linter, and the tests before every commit. If any of these fail, the commit is rejected. This is not about distrust. It is about creating a structure where mistakes are caught early, before they compound. The AI operates within guardrails that I set, and those guardrails reflect my judgment about what matters. Performance matters, so I use a language and a framework that enforce real-time safety. Consistency matters, so I require formatting and linting. Correctness matters, so I require tests. These are my values, encoded in automation.</p>
+
+            <p>The essay could continue into the specifics of the architecture I built, the OSC messages, the state machines, the version labeling system that lets me say "go back to the bright arpeggio version" and have the system restore that state. But the specifics matter less than the process that produced them. The process was: state your preferences, ask for research, evaluate the research against your experience, let go of assumptions that do not survive scrutiny, hold on to domain knowledge that the research does not capture, and encode your values in the structure of the project so that they persist across sessions.</p>
+
+            <p>I want to return to the question I started with. How do you know when your experience should guide the project and when you should step back? I do not have a formula, but I have heuristics.</p>
+
+            <p>If your instinct is based on how things were done five years ago, question it. The field is moving fast. What was best practice in 2020 may be obsolete now. If your instinct is based on something the AI cannot know, like how a musician thinks about timing or how a particular user base behaves, trust it. The AI has read a lot, but it has not lived your specific life or worked in your specific domain with your specific users.</p>
+
+            <p>If the research contradicts your instinct and provides evidence, take the research seriously. Read the sources. Understand why the community converged on a different approach. You might learn something that changes your mind. If the research is vague or based on different constraints than yours, trust your judgment. The AI is summarizing across many contexts, and your context is specific.</p>
+
+            <p>If you find yourself fighting the AI repeatedly on the same point, ask yourself whether you are right or whether you are stubborn. Sometimes you are right, and you need to explain your reasoning more clearly so the AI incorporates it. Sometimes you are stubborn, and the resistance is a signal that you should let go.</p>
+
+            <p>The larger lesson is that AI-assisted development is not about the AI doing your job. It is about a collaboration where each party contributes what they are best at. You bring experience, taste, domain knowledge, and judgment about tradeoffs. The AI brings breadth, tirelessness, access to the accumulated knowledge of the community, and the ability to generate implementations faster than you can type. Neither is sufficient alone. Together, you can build things that would take you much longer to build on your own, and build them in ways that reflect both your values and the wisdom of the crowd.</p>
+
+            <p>I am not making a claim about the future of programming or the obsolescence of developers. I am making a more modest claim: that in December 2025, with the tools available today, there is a way of working that is better than either pure human development or pure vibe coding. It requires knowing yourself, knowing your tools, and being willing to let go of assumptions that do not serve the project.</p>
+
+            <p>The project I built in a day would have taken me a week without AI assistance. More importantly, it would have been worse. I would have used WebSockets instead of OSC, missing out on ecosystem compatibility. I would have built my own session persistence instead of adopting Anthropic's pattern, and it would have been less robust. I would have made architectural decisions based on incomplete information, not knowing what the community had already learned. The AI did not replace my judgment. It informed it. And in the places where I trusted that informed judgment over my initial instincts, the project is better for it.</p>
+
+            <p>That, finally, is the answer to the question. You hold on to what you know that the AI cannot know. You let go of what you assume, when the research shows a better way. And you learn, through practice, to tell the difference.</p>
+        </article>
+
+        <p class="colophon">Written December 30, 2025 by Brian Edwards, with Claude Opus 4.5 via Claude Code CLI 2.0.76. The research cited is from Anthropic's engineering blog and publicly available documentation. The project described is real, built during the writing of this essay, with all the mistakes and corrections that implies.</p>
+
+        <footer>
+            <p><a href="./">Voxel</a> · <a href="https://github.com/audio-forge-rs/vibewig">GitHub</a></p>
+        </footer>
+    </div>
+</body>
+</html>
